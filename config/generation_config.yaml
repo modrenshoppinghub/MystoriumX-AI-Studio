@@ -1,0 +1,18 @@
+version: "3.0.0"
+generation_settings:
+  duration_sec: 15.0
+  seed: 42
+  temperature: 1.0
+  top_p: 0.95
+  top_k: 250
+  guidance_scale: 3.0
+  sample_rate_hz: 48000
+  stereo: true
+  fade_in_sec: 1.5
+  fade_out_sec: 2.5
+  loop_mode: false
+post_processing:
+  enable_mastering: true
+  high_pass_cutoff_hz: 30.0
+  target_lufs: -14.0
+  max_peak_db: -0.3
