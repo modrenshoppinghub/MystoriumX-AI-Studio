@@ -1,72 +1,78 @@
 """
-Global Pytest Configuration & Test Fixtures for MystoriumX AI Studio.
+Global Pytest Configuration & Fixture Suite for MystoriumX AI Studio.
 
-Handles root module path resolution and provides reusable audio, system,
-and tensor fixtures across all test modules.
+Ensures zero-config module resolution across environments and provides
+hardware auto-detection, signal generators, mock schemas, and temporary filesystem context.
 """
 
-import sys
 import os
-from pathlib import Path
+import sys
 import tempfile
+from pathlib import Path
+from typing import Generator
+
+import numpy as np
 import pytest
 import torch
-import numpy as np
 
 # -----------------------------------------------------------------------------
-# 1. System Path Resolution
+# 1. Core Module Resolution & Path Injection
 # -----------------------------------------------------------------------------
-# Resolve absolute path to the project root directory (parent of tests/)
 PROJECT_ROOT = Path(__file__).parent.parent.resolve()
 
-# Prepend project root to sys.path to guarantee import discovery
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-# Set environment variable for child subprocesses or runner tools
 os.environ["PYTHONPATH"] = str(PROJECT_ROOT)
 
 
 # -----------------------------------------------------------------------------
-# 2. Pytest Hooks & Environment Setup
+# 2. Pytest Configuration & Hardware Detection
 # -----------------------------------------------------------------------------
-def pytest_configure(config):
-    """Registers custom markers for targeted test execution."""
+def pytest_configure(config: pytest.Config) -> None:
+    """Register custom markers for targeted test execution."""
     config.addinivalue_line(
-        "markers", "gpu: mark test as requiring CUDA GPU availability"
+        "markers", "gpu: mark test as requiring CUDA GPU acceleration"
     )
     config.addinivalue_line(
-        "markers", "slow: mark test as slow running dynamic DSP benchmark"
+        "markers", "slow: mark test as a long-running DSP benchmark"
     )
 
 
+def pytest_runtest_setup(item: pytest.Item) -> None:
+    """Automatically skip tests marked with @pytest.mark.gpu if CUDA is unavailable."""
+    for marker in item.iter_markers(name="gpu"):
+        if not torch.cuda.is_available():
+            pytest.skip("CUDA device unavailable; skipping GPU-accelerated test.")
+
+
 # -----------------------------------------------------------------------------
-# 3. Core Engine Fixtures
+# 3. Environment & Hardware Fixtures
 # -----------------------------------------------------------------------------
 @pytest.fixture(scope="session")
 def sample_rate() -> int:
-    """Standard broadcast sample rate (48000 Hz)."""
+    """Default broadcast audio sample rate (48000 Hz)."""
     return 48000
 
 
 @pytest.fixture(scope="session")
 def cd_sample_rate() -> int:
-    """CD quality sample rate (44100 Hz)."""
+    """Standard CD audio sample rate (44100 Hz)."""
     return 44100
 
 
 @pytest.fixture(scope="session")
 def device() -> torch.device:
-    """Determines PyTorch execution device for tests."""
+    """Returns CUDA device if available, falling back to CPU."""
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 # -----------------------------------------------------------------------------
-# 4. Audio Tensor Fixtures
+# 4. Audio Tensor & Signal Generators
 # -----------------------------------------------------------------------------
 @pytest.fixture
 def dummy_mono_signal(sample_rate: int) -> torch.Tensor:
-    """Generates 1 second of 440Hz sine wave (1 channel, N samples)."""
+    """Generates 1 second of a 440 Hz pure sine wave (1 channel, N samples)."""
     duration = 1.0
     num_samples = int(sample_rate * duration)
     t = torch.linspace(0, duration, num_samples)
@@ -76,7 +82,7 @@ def dummy_mono_signal(sample_rate: int) -> torch.Tensor:
 
 @pytest.fixture
 def dummy_stereo_signal(sample_rate: int) -> torch.Tensor:
-    """Generates 2 seconds of 440Hz stereo sine wave (2 channels, N samples)."""
+    """Generates 2 seconds of a 440 Hz stereo sine wave (2 channels, N samples)."""
     duration = 2.0
     num_samples = int(sample_rate * duration)
     t = torch.linspace(0, duration, num_samples)
@@ -87,21 +93,30 @@ def dummy_stereo_signal(sample_rate: int) -> torch.Tensor:
 @pytest.fixture
 def dummy_narration_signal(sample_rate: int) -> torch.Tensor:
     """
-    Generates a synthetic narration signal containing active speech segments
-    and silence intervals for sidechain ducking tests.
+    Generates a 3-second audio track containing periodic speech tones
+    interspersed with silence for sidechain ducking testing.
     """
     duration = 3.0
     num_samples = int(sample_rate * duration)
     signal = torch.zeros((1, num_samples))
     
-    # Simulate speech voice burst between 1.0s and 2.0s
+    # Active voice burst between 1.0s and 2.0s
     start_idx = int(1.0 * sample_rate)
     end_idx = int(2.0 * sample_rate)
     t = torch.linspace(0, 1.0, end_idx - start_idx)
-    speech_tone = torch.sin(2 * np.pi * 200.0 * t) * 0.8  # Fundamental human voice frequency
+    speech_tone = torch.sin(2 * np.pi * 220.0 * t) * 0.75  # Vocal frequency range
     
     signal[0, start_idx:end_idx] = speech_tone
-    return signal.repeat(2, 1)  # Convert to stereo (2, num_samples)
+    return signal.repeat(2, 1)  # Shape: (2, num_samples)
+
+
+@pytest.fixture
+def dummy_white_noise(sample_rate: int) -> torch.Tensor:
+    """Generates 1 second of stereo uniform white noise for spectrum and EQ testing."""
+    duration = 1.0
+    num_samples = int(sample_rate * duration)
+    noise = torch.rand((2, num_samples)) * 2.0 - 1.0
+    return noise
 
 
 # -----------------------------------------------------------------------------
@@ -109,23 +124,38 @@ def dummy_narration_signal(sample_rate: int) -> torch.Tensor:
 # -----------------------------------------------------------------------------
 @pytest.fixture
 def mock_audio_buffer(dummy_stereo_signal: torch.Tensor, sample_rate: int):
-    """Provides a instantiated AudioBuffer object using the primary processor."""
+    """Instantiates a primary AudioBuffer container."""
     from audio_processor import AudioBuffer
     return AudioBuffer(data=dummy_stereo_signal, sample_rate=sample_rate)
 
 
 @pytest.fixture
 def mock_narration_buffer(dummy_narration_signal: torch.Tensor, sample_rate: int):
-    """Provides an AudioBuffer object containing narration audio."""
+    """Instantiates an AudioBuffer container populated with narration content."""
     from audio_processor import AudioBuffer
     return AudioBuffer(data=dummy_narration_signal, sample_rate=sample_rate)
 
 
 # -----------------------------------------------------------------------------
-# 6. File & Directory System Fixtures
+# 6. Schema & Mock Data Fixtures
 # -----------------------------------------------------------------------------
 @pytest.fixture
-def temp_output_dir():
-    """Provides a temporary workspace directory cleaned up after test completion."""
+def sample_music_params():
+    """Provides valid parameters for AI Music Generation testing."""
+    return {
+        "prompt": "Cinematic dark orchestral tension with heavy sub bass and strings",
+        "duration": 15.0,
+        "genre": "Cinematic",
+        "tempo": 90,
+        "lufs_target": -14.0
+    }
+
+
+# -----------------------------------------------------------------------------
+# 7. Filesystem & Output Fixtures
+# -----------------------------------------------------------------------------
+@pytest.fixture
+def temp_output_dir() -> Generator[Path, None, None]:
+    """Provides a clean temporary output directory that self-cleans post-test."""
     with tempfile.TemporaryDirectory() as temp_dir:
-        yield temp_dir
+        yield Path(temp_dir)
