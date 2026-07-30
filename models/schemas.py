@@ -1,83 +1,39 @@
 """
-Pydantic Schemas for MystoriumX AI Studio Data Models (Phase 1 & Phase 2)
+Pydantic Schemas Extension for MystoriumX AI Studio (Phase 3 Engine)
 """
 
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
 
-class SceneRaw(BaseModel):
-    """Raw scene extracted from document source."""
+class MusicGenerationParams(BaseModel):
+    """Execution parameters controlling synthesis and DSP generation."""
+    duration_sec: float = Field(default=30.0, ge=1.0, le=600.0, description="Target clip duration")
+    seed: int = Field(default=-1, description="Random seed (-1 for random non-deterministic)")
+    temperature: float = Field(default=1.0, ge=0.1, le=2.0, description="Sampling randomness scale")
+    top_p: float = Field(default=0.95, ge=0.0, le=1.0, description="Nucleus sampling threshold")
+    top_k: int = Field(default=250, ge=0, description="Top-k tokens considered")
+    guidance_scale: float = Field(default=3.0, ge=1.0, le=20.0, description="Classifier-free guidance scale")
+    sample_rate_hz: int = Field(default=48000, description="Target output sample rate in Hz")
+    stereo: bool = Field(default=True, description="Stereo output toggle")
+    fade_in_sec: float = Field(default=1.5, ge=0.0, description="Fade in duration")
+    fade_out_sec: float = Field(default=2.5, ge=0.0, description="Fade out duration")
+    loop_mode: bool = Field(default=False, description="Seamless loop synthesis tag")
+
+
+class GenerationExportResult(BaseModel):
+    """Complete metadata record for rendered scene audio exports."""
     scene_number: int
-    raw_text: str
-    word_count: int
-
-
-class EmotionAnalysis(BaseModel):
-    """Multi-dimensional emotional and psychological profiling of a scene."""
-    primary_emotion: str = Field(..., description="Dominant emotion (e.g., Fear, Mystery, Hope)")
-    energy_level: float = Field(..., ge=0.0, le=1.0, description="Normalized energy scale 0.0 to 1.0")
-    suspense_level: float = Field(..., ge=0.0, le=1.0, description="Normalized suspense scale 0.0 to 1.0")
-
-
-class MusicPlan(BaseModel):
-    """Cinematic music score directive for a specific scene."""
-    music_style: str = Field(..., description="Genre/Style directive")
-    tempo_bpm: int = Field(..., ge=40, le=220, description="Recommended BPM")
-    recommended_instruments: List[str] = Field(default_factory=list, description="Target instruments")
-
-
-class SceneAnalysisOutput(BaseModel):
-    """Full aggregated output schema for a single scene in Phase 1."""
-    scene_number: int
-    duration_estimate_sec: float
-    text_excerpt: str
-    emotion: EmotionAnalysis
-    music_plan: MusicPlan
-
-
-class StudioScriptReport(BaseModel):
-    """Final JSON serializable studio report for Phase 1."""
-    title: str
-    total_scenes: int
-    total_estimated_duration_sec: float
-    scenes: List[SceneAnalysisOutput]
-
-
-# =====================================================================
-# PHASE 2 SCHEMAS
-# =====================================================================
-
-class AudioTechnicalSettings(BaseModel):
-    """Audio DSP parameters for music generation targets."""
-    sample_rate_hz: int = Field(default=48000, description="Sampling rate in Hz")
-    bit_depth: int = Field(default=24, description="Audio bit depth")
-    channels: str = Field(default="Stereo", description="Audio channel configuration")
-    target_loudness_lufs: float = Field(default=-14.0, description="Integrated loudness standard")
-    reverb_decay_sec: float = Field(default=2.5, description="Acoustic space decay time in seconds")
-
-
-class AIMusicPromptOutput(BaseModel):
-    """Structured AI Music Generation Output for Phase 2."""
-    scene: int
-    prompt: str = Field(..., description="Fully engineered and optimized prompt string")
-    tempo: int = Field(..., ge=40, le=220, description="BPM tempo")
-    key: str = Field(..., description="Musical Key and Scale (e.g., D Minor)")
-    style: str = Field(..., description="Documentary style descriptor")
-    genre: str = Field(..., description="Broad music classification")
-    mood: str = Field(..., description="Primary atmosphere/mood")
-    energy: str = Field(..., description="Qualitative energy descriptor (Low, Medium, High, Extreme)")
-    intensity: float = Field(..., ge=0.0, le=1.0, description="Normalized intensity level")
-    atmosphere: str = Field(..., description="Acoustic space or soundscape environment")
-    buildup_structure: str = Field(..., description="Dynamic progression type")
-    ending_style: str = Field(..., description="Musical resolution style")
-    instruments: List[str] = Field(default_factory=list, description="Selected orchestration array")
-    network_preset: str = Field(..., description="Target network aesthetic template applied")
-    audio_settings: AudioTechnicalSettings = Field(default_factory=AudioTechnicalSettings)
-
-
-class Phase2StudioReport(BaseModel):
-    """Complete aggregated Phase 2 production output."""
-    project_title: str
-    total_scenes_processed: int
-    prompts: List[AIMusicPromptOutput]
+    provider_used: str
+    prompt_used: str
+    wav_path: str
+    mp3_path: str
+    waveform_png_path: str
+    metadata_json_path: str
+    actual_duration_sec: float
+    sample_rate_hz: int
+    bit_depth: int
+    channels: int
+    peak_db: float
+    integrated_lufs: float
+    generation_time_sec: float
