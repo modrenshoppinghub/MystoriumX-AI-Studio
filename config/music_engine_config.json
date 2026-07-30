@@ -1,0 +1,15 @@
+{
+  "version": "2.0.0",
+  "project_name": "MystoriumX AI Studio - Phase 2",
+  "default_network_preset": "Netflix Documentary",
+  "audio_rendering_defaults": {
+    "sample_rate_hz": 48000,
+    "bit_depth": 24,
+    "channels": "Stereo",
+    "target_loudness_lufs": -14.0
+  },
+  "prompt_optimization": {
+    "enable_auto_optimizer": true,
+    "force_instrumental": true
+  }
+}
