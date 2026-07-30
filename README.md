@@ -1,36 +1,30 @@
-## Phase 4: Professional Audio Processing Engine
+# MystoriumX AI Studio (v1.0 Production Release)
 
-Phase 4 introduces a full-featured mastering and DSP engine for raw AI-generated audio assets.
+**MystoriumX AI Studio** is an audio processing engine designed to transform raw AI-generated music tracks into cinematic documentary soundtracks.
 
-### Features
-* **Broadcast LUFS Normalization**: Integrated EBU R128 loudness targeting (-14 LUFS default).
-* **True Peak Brickwall Limiter**: Zero-clipping lookahead limiting (-1.0 dB ceiling).
-* **Parametric Equalizer**: Low-shelf, high-shelf, and multi-band peaking biquad filters.
-* **Smart Voice Ducking**: Automatic dynamic sidechain music ducking when speech narration is active.
-* **Multiformat Exporter**: Export mastering suites directly to 24-bit WAV, FLAC, and MP3 along with metadata manifests and visual waveform diagnostic plots.
+---
 
-### Usage Example
-```python
-from audio_processor import BaseAudioProcessor
-from mastering_engine import MasteringEngine
-from export_engine import ExportEngine
-from waveform_generator import WaveformGenerator
+## Key Features
 
-# Initialize
-sample_rate = 48000
-mastering_sys = MasteringEngine(sample_rate=sample_rate)
+- **Automated Loudness Normalization**: Target specific broadcast standards (e.g., -14.0 LUFS for streaming).
+- **Voice Ducking Engine**: Dynamically attenuates background audio whenever speech is detected.
+- **Parametric Equalization & Dynamic Compression**: High-pass, low-pass, peaking filters, and dynamic compression.
+- **Lookahead True Peak Limiter**: Prevents clipping with a configurable dB ceiling (default: -1.0 dB).
+- **Multi-Format Audio Exporter**: Generates broadcast-ready 24-bit WAV, 320kbps MP3, and FLAC formats alongside metadata manifests.
+- **Visual Analytics**: Generates combined waveform graphs, FFT frequency spectra, and RMS loudness profiles.
 
-# Load Audio
-music_buf = mastering_sys.base_proc.load_audio("raw_music.wav")
-narration_buf = mastering_sys.base_proc.load_audio("narration.wav")
+---
 
-# Master
-mastered_buf = mastering_sys.master_soundtrack(music_buf, narration_buf, target_lufs=-14.0)
+## Quick Start
 
-# Export Package
-exporter = ExportEngine(sample_rate=sample_rate)
-export_files = exporter.export_all(mastered_buf.data, output_dir="./output")
+### Local Setup
+```bash
+# 1. Clone & Setup virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Generate Waveform Plots
-wf = WaveformGenerator()
-wf.generate_all_plots(mastered_buf.data, sample_rate, "./output/waveform.png")
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Process an audio asset
+python main.py -m raw_music.wav -n narration.wav -o ./mastered_output
