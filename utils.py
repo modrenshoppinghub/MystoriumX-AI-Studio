@@ -1,64 +1,24 @@
-"""
-Utility functions for file handling and text parsing.
-"""
+import torch
 
-import logging
-from pathlib import Path
-from typing import List
-import docx
-import pypdf
+class HardwareDeviceEngine:
+    """Detects available hardware accelerators (CUDA, Apple Silicon MPS, or CPU)."""
 
-from config import LOG_FILE_PATH, LOG_FORMAT
-
-def setup_logger(name: str) -> logging.Logger:
-    """Configures structured logging across modules."""
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.INFO)
-    if not logger.handlers:
-        file_handler = logging.FileHandler(LOG_FILE_PATH)
-        file_handler.setFormatter(logging.Formatter(LOG_FORMAT))
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(logging.Formatter(LOG_FORMAT))
-        logger.addHandler(file_handler)
-        logger.addHandler(console_handler)
-    return logger
-
-class DocumentLoader:
-    """Handles reading TXT, DOCX, and PDF document formats."""
-    
     @staticmethod
-    def load_document(file_path: Path) -> str:
-        """Parses document based on file extension."""
-        path = Path(file_path)
-        if not path.exists():
-            raise FileNotFoundError(f"Script file not found: {path}")
-
-        ext = path.suffix.lower()
-        if ext == ".txt":
-            return DocumentLoader._load_txt(path)
-        elif ext == ".docx":
-            return DocumentLoader._load_docx(path)
-        elif ext == ".pdf":
-            return DocumentLoader._load_pdf(path)
+    def detect_device() -> str:
+        if torch.cuda.is_available():
+            device_name = torch.cuda.get_device_name(0)
+            logger.info(f"CUDA Hardware detected: {device_name}")
+            return "cuda"
+        elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+            logger.info("Apple Silicon Metal (MPS) detected.")
+            return "mps"
         else:
-            raise ValueError(f"Unsupported file format: {ext}")
+            logger.warning("No GPU detected. Falling back to CPU execution.")
+            return "cpu"
 
     @staticmethod
-    def _load_txt(path: Path) -> str:
-        with open(path, "r", encoding="utf-8") as f:
-            return f.read()
-
-    @staticmethod
-    def _load_docx(path: Path) -> str:
-        doc = docx.Document(path)
-        return "\n".join([para.text for para in doc.paragraphs if para.text.strip()])
-
-    @staticmethod
-    def _load_pdf(path: Path) -> str:
-        reader = pypdf.PdfReader(path)
-        text_chunks = []
-        for page in reader.pages:
-            extracted = page.extract_text()
-            if extracted:
-                text_chunks.append(extracted)
-        return "\n".join(text_chunks)
+    def optimize_memory():
+        """Clears hardware VRAM caches across platforms."""
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.ipc_collect()
