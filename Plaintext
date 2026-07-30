@@ -1,0 +1,17 @@
+MystoriumX-AI-Studio/
+├── README.md
+├── requirements.txt
+├── config.py
+├── utils.py
+├── script_analyzer.py
+├── scene_detector.py
+├── emotion_engine.py
+├── music_planner.py
+├── main.py
+├── prompts/
+│   └── script_prompts.py
+├── models/
+│   └── schemas.py
+├── logs/
+└── tests/
+    └── test_studio.py
