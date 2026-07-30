@@ -1,0 +1,5 @@
+# Build the container
+docker build -t mystoriumx:v1.0 .
+
+# Run audio processing
+docker run --rm -v $(pwd):/data mystoriumx:v1.0 -m /data/raw_music.wav -o /data/mastered_output
