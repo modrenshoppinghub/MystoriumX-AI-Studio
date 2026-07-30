@@ -8,10 +8,22 @@ MystoriumX-AI-Studio/
 ├── emotion_engine.py
 ├── music_planner.py
 ├── main.py
+├── music_engine.py                <-- Phase 2
+├── music_prompt_builder.py        <-- Phase 2
+├── instrument_engine.py           <-- Phase 2
+├── tempo_engine.py                <-- Phase 2
+├── style_engine.py                <-- Phase 2
+├── genre_engine.py                <-- Phase 2
+├── audio_settings.py              <-- Phase 2
 ├── prompts/
-│   └── script_prompts.py
+│   ├── script_prompts.py
+│   └── network_templates.py       <-- Phase 2 (200+ Prompt Templates)
 ├── models/
-│   └── schemas.py
+│   └── schemas.py                 <-- Phase 2 Extended Schema
+├── config/                        <-- Phase 2 Configurations
+│   ├── music_engine_config.json
+│   └── music_engine_config.yaml
 ├── logs/
 └── tests/
-    └── test_studio.py
+    ├── test_studio.py
+    └── test_music_engine.py       <-- Phase 2 Tests
