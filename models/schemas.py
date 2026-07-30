@@ -1,6 +1,7 @@
 """
-MystoriumX AI Studio - Pydantic Data Models and Schemas
-Defines core data structures for audio parameters, AI music prompts, scene analysis, and studio reporting.
+MystoriumX AI Studio - Core Pydantic Data Models and Schemas
+Defines schema definitions for audio technical settings, generation parameters,
+AI music prompts, scene analysis, export tracking, and studio orchestrations.
 """
 
 from typing import List, Optional, Dict, Any
@@ -16,12 +17,22 @@ class AudioTechnicalSettings(BaseModel):
 
 
 class MusicGenerationParams(BaseModel):
-    """Parameters passed to the AI music generation engine."""
+    """Execution parameters controlling synthesis and DSP generation."""
     prompt: str = Field(..., description="Textual description or prompt for music generation")
     duration: float = Field(default=30.0, description="Duration of generated audio in seconds")
+    duration_sec: float = Field(default=30.0, ge=1.0, le=600.0, description="Target clip duration")
     genre: Optional[str] = Field(default="Cinematic", description="Primary musical genre")
     tempo: Optional[int] = Field(default=90, description="BPM tempo target")
-    temperature: float = Field(default=1.0, description="Sampling temperature for AI generation model")
+    seed: int = Field(default=-1, description="Random seed (-1 for random non-deterministic)")
+    temperature: float = Field(default=1.0, ge=0.1, le=2.0, description="Sampling randomness scale")
+    top_p: float = Field(default=0.95, ge=0.0, le=1.0, description="Nucleus sampling threshold")
+    top_k: int = Field(default=250, ge=0, description="Top-k tokens considered")
+    guidance_scale: float = Field(default=3.0, ge=1.0, le=20.0, description="Classifier-free guidance scale")
+    sample_rate_hz: int = Field(default=48000, description="Target output sample rate in Hz")
+    stereo: bool = Field(default=True, description="Stereo output toggle")
+    fade_in_sec: float = Field(default=1.5, ge=0.0, description="Fade in duration")
+    fade_out_sec: float = Field(default=2.5, ge=0.0, description="Fade out duration")
+    loop_mode: bool = Field(default=False, description="Seamless loop synthesis tag")
 
 
 class AIMusicPromptOutput(BaseModel):
@@ -41,6 +52,24 @@ class SceneRaw(BaseModel):
     description: str = Field(default="", description="Visual or textual description of scene content")
     intensity_score: float = Field(default=0.5, description="Relative mood/intensity rating (0.0 to 1.0)")
     dominant_mood: Optional[str] = Field(default="Neutral", description="Primary mood tag for scene")
+
+
+class GenerationExportResult(BaseModel):
+    """Complete metadata record for rendered scene audio exports."""
+    scene_number: int
+    provider_used: str
+    prompt_used: str
+    wav_path: str
+    mp3_path: str
+    waveform_png_path: str
+    metadata_json_path: str
+    actual_duration_sec: float
+    sample_rate_hz: int
+    bit_depth: int
+    channels: int
+    peak_db: float
+    integrated_lufs: float
+    generation_time_sec: float
 
 
 class StudioScriptReport(BaseModel):
