@@ -1,0 +1,5 @@
+- name: Run Unit & Integration Test Suite
+      env:
+        PYTHONPATH: .
+      run: |
+        pytest tests/ -v --cov=. --cov-report=xml
