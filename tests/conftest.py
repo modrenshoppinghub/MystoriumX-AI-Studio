@@ -90,7 +90,7 @@ def make_sine_wave() -> Callable[[float, float, int, int], torch.Tensor]:
         t = torch.linspace(0, duration, num_samples)
         mono = torch.sin(2 * np.pi * freq * t)
         return mono.repeat(channels, 1)
-        
+
     return _generator
 
 
@@ -144,7 +144,6 @@ def mock_audio_buffer(dummy_stereo_signal: torch.Tensor, sample_rate: int):
         from audio_processor import AudioBuffer
         return AudioBuffer(data=dummy_stereo_signal, sample_rate=sample_rate)
     except ImportError:
-        # Graceful fallback if class is defined under different namespace
         from audio import AudioBuffer
         return AudioBuffer(data=dummy_stereo_signal, sample_rate=sample_rate)
 
