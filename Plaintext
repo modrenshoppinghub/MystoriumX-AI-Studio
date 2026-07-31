@@ -1,41 +1,24 @@
 MystoriumX-AI-Studio/
-├── README.md
-├── requirements.txt
-├── config.py
-├── utils.py
-├── script_analyzer.py
-├── scene_detector.py
-├── emotion_engine.py
-├── music_planner.py
-├── music_engine.py
-├── music_prompt_builder.py
-├── instrument_engine.py
-├── tempo_engine.py
-├── style_engine.py
-├── genre_engine.py
-├── audio_settings.py
-├── generation_orchestrator.py      <-- Phase 3
-├── audio_post_processor.py         <-- Phase 3
-├── waveform_generator.py           <-- Phase 3
-├── providers/                      <-- Phase 3
-│   ├── __init__.py
-│   ├── base_provider.py
-│   ├── musicgen_provider.py
-│   ├── ace_provider.py
-│   ├── stableaudio_provider.py
-│   └── provider_manager.py
-├── prompts/
-│   ├── script_prompts.py
-│   └── network_templates.py
 ├── models/
-│   └── schemas.py                 <-- Phase 3 Extended Schema
-├── config/
-│   ├── music_engine_config.json
-│   ├── music_engine_config.yaml
-│   └── generation_config.yaml     <-- Phase 3
-├── output/                         <-- Phase 3 Exports
-├── logs/
-└── tests/
-    ├── test_studio.py
-    ├── test_music_engine.py
-    └── test_generation_engine.py  <-- Phase 3
+│   ├── __init__.py
+│   └── schemas.py              # Pydantic data models and domain entities
+├── providers/
+│   ├── __init__.py
+│   ├── base_provider.py        # Abstract interface for audio synthesis backends
+│   ├── musicgen_provider.py    # Local Transformers/PyTorch MusicGen implementation
+│   └── provider_manager.py    # Backend provider registry and selection factory
+├── tests/
+│   ├── conftest.py             # Shared pytest fixtures and environment setup
+│   ├── test_generation_engine.py
+│   ├── test_music_engine.py
+│   └── test_studio.py
+├── .github/
+│   └── workflows/
+│       └── ci.yml              # GitHub Actions CI pipeline
+├── audio_processor.py          # DSP audio buffer manipulation, ducking, and mastering
+├── music_engine.py             # Core orchestration interface for score generation
+├── scene_detector.py           # Computer vision video scene parsing and boundary analysis
+├── utils.py                    # Structured logging and helper utilities
+├── Dockerfile                  # Container definition for CPU/CUDA workloads
+├── pyproject.toml              # Project configuration, dependencies, and tools
+└── README.md                   # Project documentation
