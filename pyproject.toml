@@ -1,3 +1,40 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mystoriumx-ai-studio"
+version = "1.0.0"
+description = "MystoriumX AI Studio soundtrack and audio engine pipeline"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=1.10.0,<3.0.0",
+]
+
 [tool.pytest.ini_options]
-pythonpath = ["."]
+minversion = "7.0"
+addopts = "-ra -q --import-mode=importlib"
 testpaths = ["tests"]
+pythonpath = ["."]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*", "*Test"]
+python_functions = ["test_*"]
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "tests/*",
+    "venv/*",
+    ".venv/*",
+    "setup.py"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "pass"
+]
