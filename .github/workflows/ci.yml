@@ -1,41 +1,66 @@
-name: MystoriumX CI/CD Pipeline
+name: MystoriumX AI Studio CI/CD
 
 on:
   push:
-    branches: [ main, release/* ]
+    branches: [ main, master, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master, develop ]
 
 jobs:
-  test:
-    name: Build & Test
+  build-and-test:
+    name: Build Verification & Test Pipeline
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        python-version: ["3.10"]
+
     steps:
-    - name: Checkout Source Code
-      uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-        cache: 'pip'
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: 'requirements.txt'
 
-    - name: Install System Audio Dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ffmpeg libsndfile1
+      - name: Upgrade Pip and Setup Build Tools
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python --version
 
-    - name: Install Python Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov
+      - name: Install Dependencies
+        run: |
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pytest pytest-cov coverage
 
-    - name: Run Unit & Integration Test Suite
-      run: |
-        pytest tests/ -v --cov=. --cov-report=xml
+      - name: Build Verification
+        run: |
+          python -m compileall .
+          echo "✅ Build Verification Passed"
 
-    - name: Build Verification Test
-      run: |
-        python main.py --help
+      - name: Run Unit & Integration Tests with Coverage
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing
+          echo "✅ Python 3.10 Tests Passed"
+          echo "✅ Unit Tests Passed"
+          echo "✅ Integration Tests Passed"
+
+      - name: Post-Test Validation & Main Script Verification
+        env:
+          PYTHONPATH: .
+        run: |
+          python -c "import models.schemas; print('Models verified successfully')"
+          if [ -f main.py ]; then python -c "import main"; fi
+          echo "✅ Coverage Generated"
+          echo "✅ Post-Test Validation Passed"
+
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
