@@ -1,13 +1,13 @@
 """
 MystoriumX AI Studio - Core Data Models and Pydantic Schemas
 
-Defines type-checked data structures, parameters, and telemetry contracts 
+Defines type-checked data structures, parameters, enums, and telemetry contracts 
 used across video scene detection, prompt enhancement, music synthesis, 
 multitrack assembly, and studio script rendering pipelines.
 """
 
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel, Field, validator
 
 
@@ -21,6 +21,7 @@ class ExportFormat(str, Enum):
     MP3 = "mp3"
     FLAC = "flac"
     OGG = "ogg"
+    AAC = "aac"
 
 
 class MasteringPreset(str, Enum):
@@ -29,6 +30,30 @@ class MasteringPreset(str, Enum):
     BROADCAST = "broadcast"    # -24 LUFS, Peak -2.0 dB
     CLUB = "club"              # -9 LUFS, Peak -0.3 dB
     CINEMATIC = "cinematic"    # -20 LUFS, Peak -2.0 dB
+    NEUTRAL = "neutral"        # Transparent / No offset
+
+
+class MoodCategory(str, Enum):
+    """Primary emotional tone designations for scenes and soundtrack tags."""
+    CINEMATIC = "Cinematic"
+    DRAMATIC = "Dramatic"
+    EPIC = "Epic"
+    AMBIENT = "Ambient"
+    TENSE = "Tense"
+    UPBEAT = "Upbeat"
+    MELANCHOLIC = "Melancholic"
+    ACTION = "Action"
+    HORROR = "Horror"
+    NEUTRAL = "Neutral"
+
+
+class GenerationStatus(str, Enum):
+    """Execution state tracking for async synthesis pipelines."""
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
 
 
 # =============================================================================
@@ -79,6 +104,14 @@ class AIMusicPromptOutput(BaseModel):
     technical_settings: AudioTechnicalSettings = Field(default_factory=AudioTechnicalSettings)
 
 
+class PromptEnhancementRequest(BaseModel):
+    """Input payload for refining raw creative prompts into model-optimized queries."""
+    raw_prompt: str = Field(..., min_length=1, description="Initial input prompt text")
+    target_genre: Optional[str] = Field(default=None, description="Genre constraint hint")
+    target_mood: Optional[str] = Field(default=None, description="Mood constraint hint")
+    target_bpm: Optional[int] = Field(default=None, ge=30, le=300, description="Desired tempo hint")
+
+
 class UserPrompt(BaseModel):
     """User input wrapper containing contextual directives for script generation."""
     prompt_text: str = Field(..., min_length=1, description="Raw input prompt provided by user")
@@ -122,6 +155,12 @@ class VoiceSegment(AudioSegment):
     speaker_id: str = Field(default="Narrator", description="Identifier for speaker/voice model")
     transcript: str = Field(..., description="Speech transcript text for the segment")
     language: str = Field(default="en", description="ISO language code of narration")
+
+
+class SoundEffectSegment(AudioSegment):
+    """Timeline audio block for Foley and incidental audio effects."""
+    fx_category: str = Field(default="Impact", description="Category tag for the sound effect")
+    spatial_position: float = Field(default=0.0, ge=-1.0, le=1.0, description="Stereo panning position (-1 Left, +1 Right)")
 
 
 class MusicTrack(BaseModel):
@@ -269,7 +308,7 @@ class AIProject(BaseModel):
 
 
 # =============================================================================
-# 7. Reports & Generation Results
+# 7. Reports, Status Telemetry & Generation Results
 # =============================================================================
 
 class GenerationExportResult(BaseModel):
@@ -288,6 +327,15 @@ class GenerationExportResult(BaseModel):
     peak_db: float = Field(..., description="Peak amplitude in dB")
     integrated_lufs: float = Field(..., description="Measured integrated loudness in LUFS")
     generation_time_sec: float = Field(..., ge=0.0, description="Wall-clock time taken for synthesis in seconds")
+
+
+class TaskProgress(BaseModel):
+    """Real-time execution status report for background studio tasks."""
+    task_id: str = Field(..., description="Unique background task ID")
+    status: GenerationStatus = Field(default=GenerationStatus.PENDING, description="Current status enum")
+    progress_percentage: float = Field(default=0.0, ge=0.0, le=100.0, description="Progress indicator (0-100%)")
+    current_step: str = Field(default="Initializing", description="Human-readable description of active sub-task")
+    error_message: Optional[str] = Field(default=None, description="Error details if status is FAILED")
 
 
 class StudioScriptReport(BaseModel):
