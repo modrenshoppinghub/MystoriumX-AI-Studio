@@ -1,29 +1,23 @@
-# MystoriumX AI Studio v1.0 Production Docker Container
 FROM python:3.10-slim
 
-# System dependencies for audio codecs & PyTorch
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    ffmpeg \
-    libsndfile1 \
-    libasound2-dev \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=.
 
 WORKDIR /app
 
-# Install Python packages
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    ffmpeg \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy application source code
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt
+
 COPY . .
 
-# Set execution user for security compliance
-RUN useradd -m appuser && chown -R appuser:appuser /app
-USER appuser
+EXPOSE 8501
 
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH=/app
-
-ENTRYPOINT ["python", "main.py"]
+CMD ["streamlit", "run", "main.py", "--server.address=0.0.0.0", "--server.port=8501"]
