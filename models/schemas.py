@@ -8,7 +8,7 @@ multitrack assembly, and studio script rendering pipelines.
 
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, HttpUrl, validator
+from pydantic import BaseModel, Field, validator
 
 
 # =============================================================================
@@ -93,7 +93,7 @@ class UserPrompt(BaseModel):
 # =============================================================================
 
 class AudioSegment(BaseModel):
-    """Base timeline element representing an generic audio block."""
+    """Base timeline element representing a generic audio block."""
     segment_id: str = Field(..., description="Unique identifier for the segment")
     start_time: float = Field(..., ge=0.0, description="Start time on the main timeline in seconds")
     end_time: float = Field(..., ge=0.0, description="End time on the main timeline in seconds")
@@ -155,7 +155,7 @@ class SceneRaw(BaseModel):
 
 
 class SceneAnalysis(BaseModel):
-    """Detailed cognitive analysis of a individual video scene."""
+    """Detailed cognitive analysis of an individual video scene."""
     scene: SceneRaw = Field(..., description="Underlying raw scene bounds")
     tags: List[str] = Field(default_factory=list, description="Descriptive semantic tags")
     recommended_genre: str = Field(default="Ambient", description="Suggested musical genre")
