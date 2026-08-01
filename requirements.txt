@@ -1,6 +1,6 @@
 streamlit==1.46.1
 
-pydantic==2.11.7
+pydantic>=2.11,<3.0
 
 numpy==1.26.4
 scipy==1.13.1
@@ -9,7 +9,6 @@ librosa==0.10.2.post1
 soundfile==0.12.1
 
 PyYAML==6.0.2
-
 requests==2.32.4
 
 ffmpeg-python==0.2.0
@@ -17,3 +16,5 @@ ffmpeg-python==0.2.0
 pytest==8.3.5
 pytest-cov==6.1.1
 coverage==7.8.0
+
+typing-extensions>=4.12.2
